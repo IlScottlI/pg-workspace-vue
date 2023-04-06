@@ -1,0 +1,14 @@
+<template>
+  <v-container>
+    <v-row>
+      <v-col>
+        <v-color-picker
+          dot-size="25"
+          mode="rgba"
+          show-swatches
+          swatches-max-height="200"
+        ></v-color-picker>
+      </v-col>
+    </v-row>
+  </v-container>
+</template>

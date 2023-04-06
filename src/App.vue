@@ -2,35 +2,35 @@
   <v-app :class="scrollbarTheme + ' overflow-auto'">
     <v-app-bar app elevation="0" color="transparent">
       <v-col cols="auto">
-        <v-tabs v-if="show" hide-slider background-color="transparent" :color="linkColor"
+        <v-tabs  hide-slider background-color="transparent" :color="linkColor"
           :active-class="linkColor + '--text'" :slider-color="linkColor" next-icon="mdi-arrow-right"
           prev-icon="mdi-arrow-left" show-arrows>
-          <v-tab v-for="item in navBarItems" :key="item.ID" :to="item.Link" :color="item.Color"
+          <v-tab :to="'/'" >
+           <v-btn>Workspace</v-btn> 
+          </v-tab>
+          <v-tab v-for="item in navBarItems" :key="item.id" :to="'/'+item.name" 
             style="text-transform: none">
-            <v-menu v-if="item.DisplayAsMenu && show" bottom right>
+            <v-menu v-if="item.DisplayAsMenu " bottom right open-on-hover offset-y>
               <template v-slot:activator="{ on, attrs }">
                 <span v-bind="attrs" v-on="on" style="text-transform: none">
-                  {{ item.Name }}
+                  {{ item.name }}
                   <v-icon right> mdi-menu-down </v-icon>
                 </span>
               </template>
 
               <v-list>
-                <v-list-item v-for="child in getChildern(item.ID)" :key="child.ID" :to="'/' + child.to">
-                  {{ child.Name }}
+                <v-list-item v-for="child in getChildern(item.id)" :key="child.id" :to="'/' + child.to">
+                  {{ child.name }}
                 </v-list-item>
               </v-list>
             </v-menu>
-            <span v-else>{{ item.Name }}</span>
+            <span v-else>{{ item.name }}</span>
           </v-tab>
         </v-tabs>
       </v-col>
       <v-spacer></v-spacer>
       <v-col cols="auto">
-        <v-btn class="text-p" v-if="page" :href="
-          '' +
-          page.ID
-        " target="_blank" text dense>
+        <v-btn class="text-p" v-if="page" to="/Editor" text dense>
           <v-icon dense>mdi-cog-outline</v-icon>
         </v-btn>
       </v-col>
@@ -40,7 +40,7 @@
       <router-view />
     </v-main>
 
-    <v-footer padless color="transparent" class="d-flex justify-space-between" app>
+    <v-footer padless color="transparent" class="d-flex justify-space-between mt-10" app dense>
       <v-col cols="1"> </v-col>
       <v-col cols="auto">
         <v-breadcrumbs :items="footerItems" divider="|">
@@ -67,6 +67,7 @@
                 <v-list-item-action>
                   <v-btn text @click="
                     theme.isDark = false;
+                    $vuetify.theme.dark = false;
                   show = false;
                                         ">
                     <v-avatar size="36px" tile class="mx-1">
@@ -79,6 +80,7 @@
                 <v-list-item-action>
                   <v-btn text @click="
                     theme.isDark = true;
+                    $vuetify.theme.dark = true;
                   show = false;
                                         ">
                     <v-avatar size="36px" tile class="mx-1">
@@ -99,6 +101,7 @@
 import router from "@/router";
 import lightIcon from "./assets/light-menu-icon.svg";
 import darkIcon from "./assets/dark-menu-icon.svg";
+import { mapGetters } from 'vuex';
 export default {
   name: "App",
 
@@ -111,6 +114,7 @@ export default {
     more: ["News", "Maps", "Books", "Flights", "Apps"],
   }),
   computed: {
+    ...mapGetters(["WorkspaceTreeBaseJSON"]),
     route: {
       get() {
         return this.$store.state.route;
@@ -139,8 +143,12 @@ export default {
       return this.$vuetify.theme.dark ? "dark" : "light";
     },
     page: function () {
-      if (!this.$store.state.page) return;
-      return this.$store.state.page;
+      if (!this.WorkspaceTreeBaseJSON) return;
+      return this.WorkspaceTreeBaseJSON[0];
+    },
+    pageItems: function () {
+      if (!this.page) return;
+      return this.page.children;
     },
     footerItems: function () {
       return this.$store.getters.footerItems;
@@ -150,22 +158,10 @@ export default {
       return this.$store.state.theme.isDark ? "white" : "black";
     },
     navBarItems: function () {
-      if (!this.$store.state.groups) return;
-      if (!Array.isArray(this.$store.state.groups)) return;
-      let arr = [this.$store.state.page];
-      arr[0].Link = "/";
-      arr[0].Color = "White";
-      this.$store.state.groups
-        .filter((e) => e.DisplayInNavbar === 1)
-        .forEach((e) => {
-          if (e.DisplayAsMenu) {
-            arr.push(e);
-          } else {
-            e.Link = "/" + e.Name;
-            arr.push(e);
-          }
-        });
-      return arr;
+      if (!this.page) return;
+      if (!this.pageItems) return;
+      if (!Array.isArray(this.pageItems)) return;
+      return this.pageItems.filter(e=>e.DisplayInNavbar == true)
     },
   },
   methods: {
@@ -176,19 +172,25 @@ export default {
       this.$router.push({ path: path });
     },
     getChildern(ParentID) {
-      return this.$store.state.groups
-        .filter((e) => e.ParentID === ParentID)
+      return this.$store.getters.groups
+        .filter((e) => e.pid === ParentID)
         .map((e) => {
           e.type = "group";
-          e.to = e.Name;
+          e.to = e.name;
           return e;
         });
+    },
+    getWorkspaceJSON: async function () {
+      let obj = {};
+      obj.namedQuery = "GET_Workspace";
+      obj.ID = this.$store.state.WorkspaceID;
+      obj.commitTo = "setWorkspaceJSON";
+      this.$store.dispatch("getWorkspaceJSON", obj);
     },
   },
   created() {
     this.$store.commit("setRoutes", router.options.routes);
     this.theme = this.$vuetify.theme;
-    this.$store.dispatch("getPages");
   },
   mounted() {
     let darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -202,25 +204,21 @@ export default {
     });
   },
   watch: {
+    theme(theme){
+      console.log(theme)
+    },
     page(page) {
-      console.log('App.vue => page',page);
-      document.title = page.Name;
-      this.$store.dispatch("getGroupsByPageParentId");
-      this.$store.dispatch("getTilesByPageParentId");
+      document.title = page.name;
     },
     show(item) {
       if (!item) return;
       setTimeout(() => {
         this.$store.commit("setShow", true);
-      }, 100);
+      }, 500);
     },
     route(item) {
       if (!item) return;
-      if (!item.params.ID) return;
-      console.log('App.vue => route',item);
-      this.$store.dispatch("getPages");
-      this.$store.dispatch("getGroupsByPageParentId");
-      this.$store.dispatch("getTilesByPageParentId");
+      if (!item.params.id) return;
     },
   },
 };

@@ -13,6 +13,11 @@ const router = new Router({
       component: () => import(/* webpackChunkName: "home" */ "../views/Home"),
     },
     {
+      path: "/Editor",
+      name: "Editor",
+      component: () => import(/* webpackChunkName: "editor" */ "../views/EditorPage"),
+    },
+    {
       path: "/:Name",
       name: "Group",
       component: () => import(/* webpackChunkName: "group" */ "../views/Group"),

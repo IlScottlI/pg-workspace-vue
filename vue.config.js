@@ -9,9 +9,5 @@ module.exports = {
       title: 'Digital Manufacturing | Workspace',
     },
   },
-  devServer: {
-    host: '127.0.0.1',
-    hot: true,
-    disableHostCheck: true,
-  },
+
 };

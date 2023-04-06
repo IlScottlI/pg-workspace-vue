@@ -1,0 +1,103 @@
+
+
+.vtl-icon.vtl-menu-icon {
+    margin-right: 4px
+}
+
+.vtl-icon.vtl-menu-icon:hover {
+    color: inherit
+}
+
+.vtl-icon:hover {
+    color: #00f
+}
+
+.vtl-icon-file:before {
+    content: \"\\e906\"
+}
+
+.vtl-icon-folder:before {
+    content: \"\\e907\"
+}
+
+.vtl-icon-caret-down:before {
+    content: \"\\e901\"
+}
+
+.vtl-icon-caret-right:before {
+    content: \"\\e900\"
+}
+
+.vtl-icon-edit:before {
+    content: \"\\e902\"
+}
+
+.vtl-icon-folder-plus-e:before {
+    content: \"\\e903\"
+}
+
+.vtl-icon-plus:before {
+    content: \"\\e904\"
+}
+
+.vtl-icon-trash:before {
+    content: \"\\e905\"
+}
+
+.vtl-border {
+    height: 5px
+}
+
+.vtl-border.vtl-up {
+    margin-top: -5px
+}
+
+.vtl-border.vtl-bottom,
+.vtl-border.vtl-up {
+    background-color: transparent
+}
+
+.vtl-border.vtl-active {
+    border-bottom: 3px dashed #00f
+}
+
+.vtl-node-main {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    -webkit-box-align: center;
+    -ms-flex-align: center;
+    align-items: center;
+    padding: 5px 0 5px 1rem;
+}
+
+.vtl-node-main .vtl-input {
+    border: none;
+    max-width: 150px;
+    border-bottom: 1px solid #00f
+}
+
+.vtl-node-main:hover {
+    background-color: #f0f0f05f
+}
+
+.vtl-node-main.vtl-active {
+    outline: 2px dashed pink
+}
+
+.vtl-node-main .vtl-caret {
+    margin-left: -1rem
+}
+
+.vtl-node-main .vtl-operation {
+    margin-left: 2rem;
+    letter-spacing: 1px
+}
+
+.vtl-item {
+    cursor: pointer
+}
+
+.vtl-tree-margin {
+    margin-left: 2em
+}
