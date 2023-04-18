@@ -90,9 +90,11 @@
 
             <template v-slot:leafNodeIcon="slotProps">
                 <span :slotProps="slotProps">
-                    <v-icon @click="slotProps.model.dialog = true" :color="slotProps.model.color">
-                        mdi-link-box
-                    </v-icon>
+                    <a :href="slotProps.model.ExternalLink" :target="slotProps.model.ExternalLink ? '_blank' : null">
+                        <v-icon :color="slotProps.model.color">
+                            mdi-link-box
+                        </v-icon>
+                    </a>
                 </span>
             </template>
 
