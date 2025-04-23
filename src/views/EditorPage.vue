@@ -10,7 +10,20 @@
             >
             <v-icon>mdi-content-save</v-icon>
         </v-btn>
-        <vue-tree-list v-if="WorkspaceJSON" @click="onClick" @change-name="onChangeName" @delete-node="onDel" @add-node="onAddNode" @drag-end="onDragEnd" @drag="onDragEnd" :model="WorkspaceJSON" default-tree-node-name="New Folder" default-leaf-node-name="New Link" defaultAddLeafNodeTitle="Add Link" default-add-Tree-node-title="Add Folder" v-bind:default-expanded="true">
+        <vue-tree-list v-if="WorkspaceJSON" 
+                        @click="onClick" 
+                        @change-name="onChangeName" 
+                        @delete-node="onDel" 
+                        @add-node="onAddNode" 
+                        @drag-end="onDragEnd" 
+                        @drag-start="onDragEnd" 
+                        :model="WorkspaceJSON" 
+                        default-tree-node-name="New Folder" 
+                        default-leaf-node-name="New Link" 
+                        defaultAddLeafNodeTitle="Add Link" 
+                        default-add-Tree-node-title="Add Folder" 
+                        v-bind:default-expanded="true"
+                        >
 
             <template v-slot:leafNameDisplay="slotProps">
 
@@ -41,10 +54,16 @@
                             <v-card-text>
                                 <v-row justify="space-around">
                                     <v-col class="pt-15 ps-15">
-                                        <a v-if="slotProps.model.isLeaf" :href="slotProps.model.ExternalLink" :target="slotProps.model.ExternalLink ? '_blank' : null" v-ripple class="materialDesignButton rounded-circle d-flex align-center" :style="{ backgroundColor: slotProps.model.color }">
+                                        <a v-if="slotProps.model.isLeaf" 
+                                            :href="slotProps.model.ExternalLink" 
+                                            :target="slotProps.model.ExternalLink ? '_blank' : null" 
+                                            v-ripple class="materialDesignButton rounded-circle d-flex align-center" 
+                                            :style="{ backgroundColor: slotProps.model.color }"
+                                            :key="slotProps.model.color"
+                                            >
                                             {{ slotProps.model.name }}
                                         </a>
-                                        <router-link v-else :to="'/' + slotProps.model.name + '/' + slotProps.model.id" class="materialDesignButton d-flex align-center"  :style="{ backgroundColor: slotProps.model.color , borderRadius: '30%'}">
+                                        <router-link v-else :to="'/' + slotProps.model.name + '/' + slotProps.model.id" class="materialDesignButton d-flex align-center"  :style="{ backgroundColor: slotProps.model.color , borderRadius: '30%'}" :key="slotProps.model.color">
                                             {{ slotProps.model.name }}
                                         </router-link>
                                     </v-col>
@@ -57,21 +76,21 @@
                                         hide-canvas
                                         show-swatches
                                         swatches-max-height="150px"
-                                        @update:color="() => { $forceUpdate(); $forceUpdate(); updateWorkspaceJSON();}"
+                                        @update:color="onColorChange"
                                         />
                                     </v-col>
                                 </v-row>
 
-                                <v-text-field v-model="slotProps.model.name" label="Name" @change="updateWorkspaceJSON()"></v-text-field>
-                                <v-text-field v-if="slotProps.model.isLeaf" v-model="slotProps.model.ExternalLink" label="ExternalLink" @change="updateWorkspaceJSON()"></v-text-field>
+                                <v-text-field v-model="slotProps.model.name" label="Name"></v-text-field>
+                                <v-text-field v-if="slotProps.model.isLeaf" v-model="slotProps.model.ExternalLink" label="ExternalLink"></v-text-field>
                                 <v-row>
                                     <v-col>
-                                        <v-checkbox v-if="(slotProps.model.isLeaf != true ? (slotProps.model.pid == 1) : false) " v-model="slotProps.model.DisplayInNavbar" label="Display In Navbar" @change="updateWorkspaceJSON()"></v-checkbox>
+                                        <v-checkbox v-if="(slotProps.model.isLeaf != true ? (slotProps.model.pid == 1) : false) " v-model="slotProps.model.DisplayInNavbar" label="Display In Navbar"></v-checkbox>
                                     </v-col>
                                     <v-col>
-                                        <v-checkbox v-if="(slotProps.model.isLeaf != true ? (slotProps.model.pid == 1) : false) " v-model="slotProps.model.DisplayAsMenu" label="Display as Menu" @change="updateWorkspaceJSON()"></v-checkbox>
+                                        <v-checkbox v-if="(slotProps.model.isLeaf != true ? (slotProps.model.pid == 1) : false) " v-model="slotProps.model.DisplayAsMenu" label="Display as Menu"></v-checkbox>
                                     </v-col>
-                                    <v-col cols="12">
+                                    <v-col cols="12" v-if="false">
                                         <v-textarea name="description" label="Description" v-model="slotProps.model.Description"></v-textarea>
                                     </v-col>
                                 </v-row>
@@ -82,7 +101,7 @@
                                 <v-btn color="primary" text @click="slotProps.model.dialog = false">
                                     Close
                                 </v-btn>
-                                <v-btn v-if="false" color="primary" text @click="() => { updateWorkspaceJSON(); slotProps.model.dialog = false; }">
+                                <v-btn v-if="true" color="primary" text @click="() => { updateWorkspaceJSON(); slotProps.model.dialog = false; }">
                                 Save
                                 </v-btn>
                             </v-card-actions>
@@ -109,7 +128,7 @@
 
             <template v-slot:leafNodeIcon="slotProps">
                 <span :slotProps="slotProps">
-                    <a :href="slotProps.model.ExternalLink" :target="slotProps.model.ExternalLink ? '_blank' : null">
+                    <a :href="slotProps.model.ExternalLink" :target="slotProps.model.ExternalLink ? '_blank' : null" :key="slotProps.model.color">
                         <v-icon :color="slotProps.model.color">
                             mdi-link-box
                         </v-icon>
@@ -239,7 +258,13 @@ export default {
 
         onChangeName(params) {
             console.log("onChangeName", params);
-            this.updateWorkspaceJSON();
+        },
+
+        onColorChange() {
+            this.$forceUpdate();
+            this.$nextTick(() => {
+                this.$forceUpdate();
+            });
         },
 
         onDragEnd(evt) {
@@ -250,7 +275,7 @@ export default {
         onAddNode(params) {
             console.log("onAddNode", params);
 
-            params.color = "#212121FF";
+            params.color = "#37474FFF";
             params.textColor = 'white';
 
             // Set default ExternalLink and other fields only for leaf nodes
@@ -263,23 +288,19 @@ export default {
             this.$set(params, 'DisplayInNavbar', false);
             this.$set(params, 'DisplayAsMenu', false);
             this.$set(params, 'dialog', false); // Also ensures the dialog will work
-
             this.updateWorkspaceJSON();
         },
 
         onClick(params) {
             console.log("onClick", params);
-            this.updateWorkspaceJSON();
         },
 
         onEditStart(params) {
             console.log("onEditStart", params);
-            this.updateWorkspaceJSON();
         },
 
         onEditBlur(params) {
             console.log("onEditBlur", params);
-            this.updateWorkspaceJSON();
         },
 
         addNode() {
@@ -290,7 +311,6 @@ export default {
             });
             if (!this.data.children) this.data.children = [];
             this.data.addChildren(node);
-            this.updateWorkspaceJSON();
         },
 
         getWorkspaceJSON: async function () {
@@ -308,7 +328,6 @@ export default {
                 ID: this.$store.state.WorkspaceID,
                 JSON_Data: JSON.stringify(this.WorkspaceTreeBaseJSON)
             };
-
             try {
                 await this.$store.dispatch("patchWorkspaceJSON", obj);
                 this.snackbar = {
@@ -316,12 +335,14 @@ export default {
                 text: 'Workspace saved successfully!',
                 color: 'success'
                 };
+                this.getWorkspaceJSON();
             } catch (e) {
                 this.snackbar = {
                 show: true,
                 text: 'Error saving workspace!',
                 color: 'error'
                 };
+                this.getWorkspaceJSON();
             }
         },
         hasStructureChanged(newTree, oldTree) {

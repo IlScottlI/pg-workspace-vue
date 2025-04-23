@@ -17,11 +17,14 @@ export default new Vuex.Store({
   state: {
     server_name: runtimeConfig.server_name || 'https://default-server.com',
     IgnitionTitle: runtimeConfig.IgnitionTitle || 'EAM',
-    WorkspaceID: runtimeConfig.WorkspaceID || 1,
+    WorkspaceID: runtimeConfig.WorkspaceID || 6,
     theme: {
       isDark: storedTheme.isDark,
       useSystemTheme: storedTheme.useSystemTheme,
     },
+    isLoggedIn: JSON.parse(localStorage.getItem("isLoggedIn")) || false,
+    userRoles: JSON.parse(localStorage.getItem("userRoles")) || [],
+    username: localStorage.getItem("username") || '',
     routes: null,
     route: null,
     routeFrom: null,
@@ -56,8 +59,14 @@ export default new Vuex.Store({
     setWorkspaceJSON: set("WorkspaceJSON"),
     setResponse: set("Response"),
     setParams: set("params"),
+    setIsLoggedIn: set("isLoggedIn"),
+    setUsername: set("username"),
+    setUserRoles: set("userRoles"),
   },
   getters: {
+    isAdmin: (state) => {
+      return state.isLoggedIn && state.userRoles.includes("Administrator");
+    },
     WorkspaceTreeBaseJSON: (state) => {
       if (!state.WorkspaceJSON) return; 
       const shapeData = (e) => {
@@ -256,7 +265,7 @@ export default new Vuex.Store({
         });
         urlParams = '?' + items.join('&');
       }
-
+      console.log(urlParams);
       let res = await fetch(`${state.server_name}/system/webdev/${state.IgnitionTitle}/APIs/RUN_Query/${urlParams}`).then(r => r.json()).catch((e) => {
         Swal.fire({
           title: 'Failed to Load Named Query',
@@ -310,6 +319,39 @@ export default new Vuex.Store({
       commit(commitTo, res);
       
     },
+    login: async function ({ state, commit }, { username, password }) {
+      const response = await fetch(`${state.server_name}/system/webdev/${state.IgnitionTitle}/APIs/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+      });
+    
+      const result = await response.json();
+    
+      if (result.status === 'success') {
+        commit('setIsLoggedIn', true);
+        commit('setUserRoles', result.roles);
+        commit('setUsername', username);
+        
+        localStorage.setItem("isLoggedIn", 'true');
+        localStorage.setItem("userRoles", JSON.stringify(result.roles));
+        localStorage.setItem("username", username);
+    
+        return { success: true };
+      } else {
+        return { success: false, message: result.message || 'Login failed' };
+      }
+    },
+    
+    logout: function ({ commit }) {
+      commit('setIsLoggedIn', false);
+      commit('setUserRoles', []);
+      commit('setUsername', '');
+
+      localStorage.removeItem("isLoggedIn");
+      localStorage.removeItem("userRoles");
+      localStorage.removeItem("username");
+    },    
 
   },
   modules: {},

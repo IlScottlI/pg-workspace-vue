@@ -52,6 +52,7 @@ export default {
       let obj = {};
       obj.namedQuery = "GET_Workspace";
       obj.ID = this.$store.state.WorkspaceID;
+      console.log( this.$store.state);
       obj.commitTo = "setWorkspaceJSON";
       this.$store.dispatch("getWorkspaceJSON", obj);
     },

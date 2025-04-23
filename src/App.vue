@@ -29,11 +29,46 @@
         </v-tabs>
       </v-col>
       <v-spacer></v-spacer>
-      <v-col cols="auto">
-        <v-btn class="text-p" v-if="page" to="/Editor" text dense>
-          <v-icon dense>mdi-cog-outline</v-icon>
-        </v-btn>
-      </v-col>
+      <v-col cols="auto" class="d-flex align-center">
+      
+
+      <!-- User Menu -->
+      <v-menu offset-y bottom>
+        <template v-slot:activator="{ on, attrs }">
+          <v-btn text v-bind="attrs" v-on="on">
+            <v-avatar size="32">
+              <v-icon>mdi-account-circle</v-icon>
+            </v-avatar>
+            {{ $store.state.username }}
+          </v-btn>
+        </template>
+
+        <v-list dense>
+          <v-list-item>
+            <v-list-item-content>
+              <v-list-item-title class="subtitle-2 font-weight-bold">
+                {{ $store.state.username }}
+              </v-list-item-title>
+              <v-list-item-subtitle class="caption grey--text">Logged in</v-list-item-subtitle>
+            </v-list-item-content>
+          </v-list-item>
+          <v-divider></v-divider>
+          <v-list-item @click="$router.push('/Editor')">
+            <v-list-item-icon><v-icon>mdi-cog-outline</v-icon></v-list-item-icon>
+            <v-list-item-title>Settings</v-list-item-title>
+          </v-list-item>
+          <v-list-item @click="handleAuthClick">
+          <v-list-item-icon>
+            <v-icon>{{ $store.state.isLoggedIn ? 'mdi-logout' : 'mdi-login' }}</v-icon>
+          </v-list-item-icon>
+          <v-list-item-title>
+            {{ $store.state.isLoggedIn ? 'Logout' : 'Login' }}
+          </v-list-item-title>
+        </v-list-item>
+        </v-list>
+      </v-menu>
+    </v-col>
+
     </v-app-bar>
 
     <v-main :class="scrollbarTheme + ' overflow-auto'">
@@ -89,7 +124,7 @@
                     Dark</v-btn>
                 </v-list-item-action>
               </v-list-item>
-              <v-list-item v-if="false">
+              <v-list-item v-if="true">
                 <v-list-item-action>
                   <v-btn text @click="
                     $store.commit('setTheme', { isDark: null, useSystemTheme: true });
@@ -174,6 +209,18 @@ export default {
     },
   },
   methods: {
+    handleAuthClick() {
+      if (this.$store.state.isLoggedIn) {
+        this.$store.dispatch("logout");
+        this.$router.push("/login");
+      } else {
+        this.$router.push("/login");
+      }
+    },
+    logout() {
+      this.$store.dispatch("logout");
+      this.$router.push("/login");
+    },
     toggleTheme() {
       this.$store.dispatch("toggleTheme");
     },
