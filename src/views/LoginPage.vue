@@ -23,6 +23,7 @@
                 dense
                 autofocus
                 required
+                id="username"
               />
               <v-btn
                 type="submit"
@@ -43,6 +44,7 @@
                 v-model="password"
                 label="Password"
                 outlined
+                id="password"
                 dense
                 :append-icon="showPassword ? 'mdi-eye-off' : 'mdi-eye'"
                 :type="showPassword ? 'text' : 'password'"
