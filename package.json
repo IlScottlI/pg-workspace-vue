@@ -13,7 +13,6 @@
     "@mdi/js": "^6.5.95",
     "@microsoft/mgt": "^2.3.1",
     "core-js": "^3.6.5",
-    "less-loader": "^11.1.0",
     "moment": "^2.29.1",
     "sweetalert2": "^11.4.4",
     "vue": "^2.6.11",
@@ -32,13 +31,16 @@
     "@vue/cli-plugin-vuex": "~4.5.0",
     "@vue/cli-service": "~4.5.0",
     "babel-eslint": "^10.1.0",
+    "cache-loader": "^4.1.0",
     "eslint": "^6.7.2",
     "eslint-plugin-vue": "^6.2.2",
+    "less-loader": "^7.3.0",
     "sass": "~1.32.0",
     "sass-loader": "^10.0.0",
     "vue-cli-plugin-vuetify": "~2.4.5",
     "vue-template-compiler": "^2.6.11",
-    "vuetify-loader": "^1.7.0"
+    "vuetify-loader": "^1.7.0",
+    "webpack": "^4.47.0"
   },
   "eslintConfig": {
     "root": true,

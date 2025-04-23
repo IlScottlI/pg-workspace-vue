@@ -66,10 +66,10 @@
               <v-list-item>
                 <v-list-item-action>
                   <v-btn text @click="
-                    theme.isDark = false;
-                    $vuetify.theme.dark = false;
-                  show = false;
-                                        ">
+                     $store.commit('setTheme', { isDark: false, useSystemTheme: false });
+                      $vuetify.theme.dark = false;
+                      show = false;
+                    ">
                     <v-avatar size="36px" tile class="mx-1">
                       <v-img :src="lightIcon" width="30" class="pa-3"></v-img>
                     </v-avatar>
@@ -79,7 +79,7 @@
               <v-list-item>
                 <v-list-item-action>
                   <v-btn text @click="
-                    theme.isDark = true;
+                    $store.commit('setTheme', { isDark: true, useSystemTheme: false });
                     $vuetify.theme.dark = true;
                   show = false;
                                         ">
@@ -87,6 +87,15 @@
                       <v-img :src="darkIcon" width="30" class="pa-3"></v-img>
                     </v-avatar>
                     Dark</v-btn>
+                </v-list-item-action>
+              </v-list-item>
+              <v-list-item v-if="false">
+                <v-list-item-action>
+                  <v-btn text @click="
+                    $store.commit('setTheme', { isDark: null, useSystemTheme: true });
+                    $vuetify.theme.dark = $store.getters.resolvedTheme;
+                    show = false;">
+                    System</v-btn>
                 </v-list-item-action>
               </v-list-item>
             </v-list>
@@ -190,17 +199,19 @@ export default {
   },
   created() {
     this.$store.commit("setRoutes", router.options.routes);
-    this.theme = this.$vuetify.theme;
   },
   mounted() {
-    let darkModeMediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    document.querySelector("#app").__vue__.$vuetify.theme.isDark =
-      darkModeMediaQuery.matches;
-    darkModeMediaQuery.addListener((e) => {
-      let darkModeOn = e.matches;
-      this.$store.dispatch("setGlobalTheme", darkModeOn);
-      document.querySelector("#app").__vue__.$vuetify.theme.isDark = darkModeOn;
-      console.log(`Dark mode is ${darkModeOn ? "🌒 on" : "☀️ off"}.`);
+    const applyTheme = () => {
+      this.$vuetify.theme.dark = this.$store.getters.resolvedTheme;
+    };
+
+    applyTheme();
+
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+    prefersDark.addEventListener("change", () => {
+      if (this.$store.state.theme.useSystemTheme) {
+        applyTheme();
+      }
     });
   },
   watch: {

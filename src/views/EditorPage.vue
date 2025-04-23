@@ -1,8 +1,16 @@
 <template>
 <v-container>
     <v-card>
-
-        <vue-tree-list v-if="WorkspaceJSON" @click="onClick" @change-name="onChangeName" @delete-node="onDel" @add-node="onAddNode" :model="WorkspaceJSON" default-tree-node-name="New Folder" default-leaf-node-name="New Link" defaultAddLeafNodeTitle="Add Link" default-add-Tree-node-title="Add Folder" v-bind:default-expanded="true">
+        <v-btn
+            fab
+            dark
+            color="primary"
+            class="floating-save-btn"
+            @click="updateWorkspaceJSON"
+            >
+            <v-icon>mdi-content-save</v-icon>
+        </v-btn>
+        <vue-tree-list v-if="WorkspaceJSON" @click="onClick" @change-name="onChangeName" @delete-node="onDel" @add-node="onAddNode" @drag-end="onDragEnd" @drag="onDragEnd" :model="WorkspaceJSON" default-tree-node-name="New Folder" default-leaf-node-name="New Link" defaultAddLeafNodeTitle="Add Link" default-add-Tree-node-title="Add Folder" v-bind:default-expanded="true">
 
             <template v-slot:leafNameDisplay="slotProps">
 
@@ -33,16 +41,24 @@
                             <v-card-text>
                                 <v-row justify="space-around">
                                     <v-col class="pt-15 ps-15">
-                                        <a v-if="slotProps.model.isLeaf" :href="slotProps.model.ExternalLink" :target="slotProps.model.ExternalLink ? '_blank' : null" v-ripple class="materialDesignButton rounded-circle d-flex align-center" :style="'background-color:' + slotProps.model.color+';'">
+                                        <a v-if="slotProps.model.isLeaf" :href="slotProps.model.ExternalLink" :target="slotProps.model.ExternalLink ? '_blank' : null" v-ripple class="materialDesignButton rounded-circle d-flex align-center" :style="{ backgroundColor: slotProps.model.color }">
                                             {{ slotProps.model.name }}
                                         </a>
-                                        <router-link v-else :to="'/' + slotProps.model.name + '/' + slotProps.model.id" class="materialDesignButton d-flex align-center" :style="'background-color:' + slotProps.model.color+';border-radius: 30%;'">
+                                        <router-link v-else :to="'/' + slotProps.model.name + '/' + slotProps.model.id" class="materialDesignButton d-flex align-center"  :style="{ backgroundColor: slotProps.model.color , borderRadius: '30%'}">
                                             {{ slotProps.model.name }}
                                         </router-link>
                                     </v-col>
 
                                     <v-col class="pe-15">
-                                        <v-color-picker mode="hexa" class="ma-2" hide-canvas show-swatches swatches-max-height="150px" v-model="slotProps.model.color" @update:color="updateWorkspaceJSON()"></v-color-picker>
+                                        <v-color-picker
+                                        v-model="slotProps.model.color"
+                                        mode="hexa"
+                                        class="ma-2"
+                                        hide-canvas
+                                        show-swatches
+                                        swatches-max-height="150px"
+                                        @update:color="() => { $forceUpdate(); $forceUpdate(); updateWorkspaceJSON();}"
+                                        />
                                     </v-col>
                                 </v-row>
 
@@ -65,6 +81,9 @@
                                 <v-spacer></v-spacer>
                                 <v-btn color="primary" text @click="slotProps.model.dialog = false">
                                     Close
+                                </v-btn>
+                                <v-btn v-if="false" color="primary" text @click="() => { updateWorkspaceJSON(); slotProps.model.dialog = false; }">
+                                Save
                                 </v-btn>
                             </v-card-actions>
                         </v-card>
@@ -142,7 +161,15 @@
         </v-dialog>
 
     </v-card>
-
+    <v-snackbar
+  v-model="snackbar.show"
+  :color="snackbar.color"
+  timeout="3000"
+  bottom
+  right
+>
+  {{ snackbar.text }}
+</v-snackbar>
 </v-container>
 </template>
 
@@ -167,11 +194,18 @@ export default {
             newTree: {},
             modified: 0,
             showJSON: false,
+            hasPendingChanges: false,
+            structureSnapshot: null,
+            snackbar: {
+                show: false,
+                text: '',
+                color: 'success'
+                },
             data: new Tree([{
                 name: 'Workspace',
                 id: 1,
                 pid: 0,
-                dragDisabled: true,
+                dragDisabled: false,
                 addTreeNodeDisabled: false,
                 addLeafNodeDisabled: false,
                 editNodeDisabled: true,
@@ -208,10 +242,28 @@ export default {
             this.updateWorkspaceJSON();
         },
 
+        onDragEnd(evt) {
+            console.log("Node moved:", evt);
+            this.updateWorkspaceJSON();  // Save updated structure to backend
+        },
+
         onAddNode(params) {
-            params.color = "#212121FF";
-            params.textColor = 'white'
             console.log("onAddNode", params);
+
+            params.color = "#212121FF";
+            params.textColor = 'white';
+
+            // Set default ExternalLink and other fields only for leaf nodes
+            if (params.isLeaf) {
+                this.$set(params, 'ExternalLink', '');
+            }
+
+            // Set defaults for all node types
+            this.$set(params, 'Description', '');
+            this.$set(params, 'DisplayInNavbar', false);
+            this.$set(params, 'DisplayAsMenu', false);
+            this.$set(params, 'dialog', false); // Also ensures the dialog will work
+
             this.updateWorkspaceJSON();
         },
 
@@ -250,18 +302,68 @@ export default {
         },
 
         updateWorkspaceJSON: async function () {
-            let obj = {};
-            obj.namedQuery = "PATCH_Workspace";
-            obj.commitTo = "setResponse";
-            obj.ID = this.$store.state.WorkspaceID;
-            obj.JSON_Data = JSON.stringify(this.WorkspaceTreeBaseJSON);
-            this.$store.dispatch("patchWorkspaceJSON", obj);
-        },
+            let obj = {
+                namedQuery: "PATCH_Workspace",
+                commitTo: "setResponse",
+                ID: this.$store.state.WorkspaceID,
+                JSON_Data: JSON.stringify(this.WorkspaceTreeBaseJSON)
+            };
 
+            try {
+                await this.$store.dispatch("patchWorkspaceJSON", obj);
+                this.snackbar = {
+                show: true,
+                text: 'Workspace saved successfully!',
+                color: 'success'
+                };
+            } catch (e) {
+                this.snackbar = {
+                show: true,
+                text: 'Error saving workspace!',
+                color: 'error'
+                };
+            }
+        },
+        hasStructureChanged(newTree, oldTree) {
+            const flatten = (tree, acc = []) => {
+            if (!tree || typeof tree !== 'object') return acc;
+            if ('id' in tree && 'pid' in tree) {
+                acc.push({ id: tree.id, pid: tree.pid });
+            }
+            if (Array.isArray(tree.children)) {
+                tree.children.forEach(child => flatten(child, acc));
+            }
+            return acc;
+            };
+
+            const flattenArray = (arr) => {
+            return arr.reduce((acc, node) => flatten(node, acc), []);
+            };
+
+            const newFlat = flattenArray(Array.isArray(newTree) ? newTree : [newTree]);
+            const oldFlat = flattenArray(Array.isArray(oldTree) ? oldTree : [oldTree]);
+
+            return JSON.stringify(newFlat) !== JSON.stringify(oldFlat);
+        },
+        getFlatStructure(tree) {
+            const result = [];
+            const traverse = (node) => {
+            if (!node) return;
+            result.push({ id: node.id, pid: node.pid });
+            if (Array.isArray(node.children)) {
+                node.children.forEach(traverse);
+            }
+            };
+
+            const roots = Array.isArray(tree) ? tree : [tree];
+            roots.forEach(traverse);
+            return result;
+        },
     },
 
     mounted() {
         this.activateMultipleDraggableDialogs();
+        this.structureSnapshot = this.getFlatStructure(this.WorkspaceJSON);
     },
 
     watch: {
@@ -272,6 +374,19 @@ export default {
         modified(modified) {
             console.log(modified);
         },
+        WorkspaceJSON: {
+            handler(newVal, oldVal) {
+            if (!newVal || !oldVal) return;
+
+            if (this.hasStructureChanged(newVal, oldVal)) {
+                console.log("Structure changed!");
+                this.hasPendingChanges = true;
+            } else {
+                console.log("Structure did not change.");
+            }
+            },
+            deep: true
+        }
     },
 }
 </script>
@@ -312,5 +427,15 @@ export default {
 .v-application .d-flex {
     display: flex !important;
     justify-content: center;
+}
+.main-content {
+  padding-top: 64px; /* adjust to match your navbar height */
+}
+.floating-save-btn {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 </style>

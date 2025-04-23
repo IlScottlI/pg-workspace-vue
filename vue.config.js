@@ -1,12 +1,12 @@
 module.exports = {
-  publicPath: process.env.NODE_ENV === 'production' ? '/Workspace' : '/',
+  publicPath: process.env.NODE_ENV === 'production' ? '/system/webdev/Workspace/vue-ui/' : '/',
   transpileDependencies: [
     'vuetify'
   ],
   pages: {
     index: {
       entry: 'src/main.js',
-      title: 'Digital Manufacturing | Workspace',
+      title: 'Workspace',
     },
   },
 

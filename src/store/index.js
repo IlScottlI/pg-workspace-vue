@@ -1,3 +1,5 @@
+const runtimeConfig = window.__APP_CONFIG__ || {};
+
 import Vue from "vue";
 import Vuex from "vuex";
 import { set } from "@/utils/vuex";
@@ -6,11 +8,20 @@ import { Tree } from 'vue-tree-list'
 
 Vue.use(Vuex);
 
+const storedTheme = JSON.parse(localStorage.getItem("userTheme")) || {
+  isDark: null,
+  useSystemTheme: true
+};
+
 export default new Vuex.Store({
   state: {
-    server_name: 'https://naaccscdatw10.oshkoshglobal.com',
-    IgnitionTitle: 'EAM',
-    theme: null,
+    server_name: runtimeConfig.server_name || 'https://default-server.com',
+    IgnitionTitle: runtimeConfig.IgnitionTitle || 'EAM',
+    WorkspaceID: runtimeConfig.WorkspaceID || 1,
+    theme: {
+      isDark: storedTheme.isDark,
+      useSystemTheme: storedTheme.useSystemTheme,
+    },
     routes: null,
     route: null,
     routeFrom: null,
@@ -23,12 +34,14 @@ export default new Vuex.Store({
     tab: null,
     params: null,
     show: true,
-    WorkspaceID: 1,
     WorkspaceJSON: null,
     Response: null,
   },
   mutations: {
-    setTheme: set("theme"),
+    setTheme(state, payload) {
+      state.theme = payload;
+      localStorage.setItem("userTheme", JSON.stringify(payload));
+    },
     setRoutes: set("routes"),
     setRoute: set("route"),
     setRouteFrom: set("routeFrom"),
@@ -188,6 +201,12 @@ export default new Vuex.Store({
         return null;
       }
     },
+    resolvedTheme: (state) => {
+      if (state.theme.useSystemTheme) {
+        return window.matchMedia("(prefers-color-scheme: dark)").matches;
+      }
+      return state.theme.isDark;
+    },
   },
   actions: {
     setGlobalTheme: function ({commit},data) {
@@ -215,7 +234,7 @@ export default new Vuex.Store({
       if(WorkspaceJSON){
         //
       }
-      let res = await fetch(`${state.server_name}/system/webdev/EAM/APIs/RUN_Query/${urlParams}`).then(r => r.json()).catch((e) => {
+      let res = await fetch(`${state.server_name}/system/webdev/${state.IgnitionTitle}/APIs/RUN_Query/${urlParams}`).then(r => r.json()).catch((e) => {
         Swal.fire({
           title: 'Failed to Load Named Query',
           text: e,
@@ -238,7 +257,7 @@ export default new Vuex.Store({
         urlParams = '?' + items.join('&');
       }
 
-      let res = await fetch(`${state.server_name}/system/webdev/EAM/APIs/RUN_Query/${urlParams}`).then(r => r.json()).catch((e) => {
+      let res = await fetch(`${state.server_name}/system/webdev/${state.IgnitionTitle}/APIs/RUN_Query/${urlParams}`).then(r => r.json()).catch((e) => {
         Swal.fire({
           title: 'Failed to Load Named Query',
           text: e,
@@ -279,7 +298,7 @@ export default new Vuex.Store({
         body: JSON_Data,
       };
 
-      let res = await fetch(`${state.server_name}/system/webdev/EAM/APIs/RUN_Query/${urlParams}`,requestOptions).then(r => r.json()).catch((e) => {
+      let res = await fetch(`${state.server_name}/system/webdev/${state.IgnitionTitle}/APIs/RUN_Query/${urlParams}`,requestOptions).then(r => r.json()).catch((e) => {
         Swal.fire({
           title: 'Failed to Load Named Query',
           text: e,
