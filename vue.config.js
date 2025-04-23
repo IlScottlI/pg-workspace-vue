@@ -9,5 +9,9 @@ module.exports = {
       title: 'Workspace',
     },
   },
-
+  configureWebpack: {
+    optimization: {
+      splitChunks: false, // 🚫 disables all code splitting (removes `~`)
+    }
+  }
 };

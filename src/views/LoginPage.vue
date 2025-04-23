@@ -101,7 +101,7 @@
         });
   
         if (result.success) {
-          this.$router.push('/admin');
+          this.$router.push('/Editor');
         } else {
           alert(result.message || 'Login failed');
         }
@@ -109,4 +109,3 @@
     }
   }
   </script>
-  
